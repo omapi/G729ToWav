@@ -11,15 +11,17 @@ int main(int argc, char *argv[])
 	char senddat[256];
 	char recvdat[256];
 
-	if(argc!=4){
-		printf("please input: dllcall.exe ~/*.dat ~/*.dat 1\nif want to delete dat files, set 0\n");
+	if(argc<3 || argc>4){
+		printf("please input: dllcall.exe ~/*.dat [~/*.dat] 1\nif want to delete dat files, set 0\n");
 		system("pause");
 		return 1;
 	}
 	memset(senddat,0,256);
 	memset(recvdat,0,256);
 	strcpy(senddat,argv[1]);
-	strcpy(recvdat,argv[2]);
+	if(argc==4){
+		strcpy(recvdat,argv[2]);
+	}
 
 	hDll = LoadLibrary("Transdat.dll");
 	if (hDll != NULL)
@@ -28,7 +30,10 @@ int main(int argc, char *argv[])
 		if (ConvertFun != NULL)
 		{
 			memset(strwav,0,256);
-			ConvertFun(senddat, recvdat, strwav,1);
+			if(argc==4)
+				ConvertFun(senddat, recvdat, strwav,1);
+			else
+				ConvertFun(senddat, NULL, strwav,1);
 			printf("result: %s\n", strwav);
 		}
 		FreeLibrary(hDll);

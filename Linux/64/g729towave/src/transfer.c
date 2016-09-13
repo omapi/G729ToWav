@@ -390,11 +390,14 @@ int addwav(char *pwav1,char *pwav2,char *pwav3)
 void ConvertG729(char *pdatfile1, char *pdatfile2, char *pwavfile, int nflag)
 {
 	char f1[256],f2[256],f3[256],f4[256],f5[256];
-	char *p1 = NULL,*p2 = NULL;
 	int nres,nlen;
 	FILE *fp =NULL;
 
-	if(!strstr(pdatfile1,".dat") || !strstr(pdatfile2,".dat"))
+	if(pdatfile1==NULL && pdatfile2==NULL)
+		return;
+	if(pdatfile1 && !strstr(pdatfile1,".dat"))
+		return;
+	if(pdatfile2 && !strstr(pdatfile2,".dat"))
 		return;
 
 	memset(f1,0,256);
@@ -402,37 +405,59 @@ void ConvertG729(char *pdatfile1, char *pdatfile2, char *pwavfile, int nflag)
 	memset(f3,0,256);
 	memset(f4,0,256);
 	memset(f5,0,256);
-	p1 = strchr(pdatfile1,'.');
-	strncpy(f1,pdatfile1,p1-pdatfile1);
-	strcat(f4,f1);
-	strcat(f1,".wav");
-	strcat(f4,".raw");
-	p2 = strchr(pdatfile2,'.');
-	strncpy(f2,pdatfile2,p2-pdatfile2);
-	strcat(f5,f2);
-	strcat(f2,".wav");
-	strcat(f5,".raw");
-	nlen = strlen(pdatfile1);
-	while(*(pdatfile1+nlen)!='_')nlen--;
-	strncpy(f3,pdatfile1,nlen);
-	strcat(f3,".wav");
 
-	fp = fopen(f3,"rb");
-	if(fp!=NULL){
-		fclose(fp);
+	if(pdatfile1 && pdatfile2){
+		nlen = strlen(pdatfile1);
+		strncpy(f1,pdatfile1,nlen-4);//.dat
+		strcpy(f4,f1);
+		strcat(f1,".wav");
+		strcat(f4,".raw");
+		G729ToPcmu(pdatfile1,f4,nflag);
+		PcmuToWave(f4,f1);
+
+		nlen = strlen(pdatfile2);
+		strncpy(f2,pdatfile2,nlen-4);//.dat
+		strcpy(f5,f2);
+		strcat(f2,".wav");
+		strcat(f5,".raw");
+		G729ToPcmu(pdatfile2,f5,nflag);
+		PcmuToWave(f5,f2);
+		
+		nlen = strlen(pdatfile1);
+		while(*(pdatfile1+nlen)!='_')nlen--;
+		strncpy(f3,pdatfile1,nlen);
+		strcat(f3,".wav");
+		fp = fopen(f3,"rb");
+		if(fp!=NULL){
+			fclose(fp);
+			strcpy(pwavfile,f3);
+			return;
+		}
+		nres = addwav(f1,f2,f3);
+		if(nres<0)
+			return;
 		strcpy(pwavfile,f3);
-		return;
 	}
-
-	G729ToPcmu(pdatfile1,f4,nflag);
-	PcmuToWave(f4,f1);
-
-	G729ToPcmu(pdatfile2,f5,nflag);
-	PcmuToWave(f5,f2);
-	
-	nres = addwav(f1,f2,f3);
-	if(nres<0)
-		return;
-
-	strcpy(pwavfile,f3);
+	else if(pdatfile1){
+		nlen = strlen(pdatfile1);
+		while(*(pdatfile1+nlen)!='_')nlen--;
+		strncpy(f1,pdatfile1,nlen);
+		strcpy(f4,f1);
+		strcat(f1,".wav");
+		strcat(f4,".raw");
+		G729ToPcmu(pdatfile1,f4,nflag);
+		PcmuToWave(f4,f1);
+		strcpy(pwavfile,f1);
+	}
+	else if(pdatfile2){
+		nlen = strlen(pdatfile2);
+		while(*(pdatfile2+nlen)!='_')nlen--;
+		strncpy(f2,pdatfile2,nlen);
+		strcpy(f5,f2);
+		strcat(f2,".wav");
+		strcat(f5,".raw");
+		G729ToPcmu(pdatfile2,f5,nflag);
+		PcmuToWave(f5,f2);
+		strcpy(pwavfile,f2);
+	}
 }
